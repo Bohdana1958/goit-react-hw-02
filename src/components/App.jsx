@@ -7,49 +7,37 @@ import { getDataFromLocalStorage } from './GetDataFromLocalStorage';
 
 export const App = () => {
   const { good, bad, neutral } = getDataFromLocalStorage();
-  const [count, setCount] = useState(() => good || 0);
-  const [click, setClick] = useState(() => bad || 0);
-  const [push, setPush] = useState(() => neutral || 0);
+  const [feedback, setFeedback] = useState({ good, bad, neutral });
 
-  const handleClick = () => {
-    setCount(count + 1);
-  };
-
-  const handleClicksBad = () => {
-    setClick(click + 1);
-  };
-
-  const handleClickNeutral = () => {
-    setPush(push + 1);
+  const handleUpdate = type => {
+    setFeedback(prevFeedback => ({
+      ...prevFeedback,
+      [type]: prevFeedback[type] + 1,
+    }));
   };
 
   const handleReset = () => {
-    setCount(0);
-    setClick(0);
-    setPush(0);
+    setFeedback({ good: 0, bad: 0, neutral: 0 });
   };
 
   useEffect(() => {
-    window.localStorage.setItem(
-      'feedbackData',
-      JSON.stringify({ good: count, bad: click, neutral: push })
-    );
-  }, [count, click, push]);
+    window.localStorage.setItem('feedbackData', JSON.stringify(feedback));
+  }, [feedback]);
 
-  const hasFeedback = count + click + push > 0;
+  const hasFeedback = feedback.good + feedback.bad + feedback.neutral > 0;
 
   return (
     <div>
       <Description />
       <Options
-        onUpdate={handleClick}
-        onUpdateBad={handleClicksBad}
-        onUpdateNeutral={handleClickNeutral}
+        onUpdate={() => handleUpdate('good')}
+        onUpdateBad={() => handleUpdate('bad')}
+        onUpdateNeutral={() => handleUpdate('neutral')}
         onReset={handleReset}
         hasFeedback={hasFeedback}
       />
       {hasFeedback ? (
-        <Feedback good={count} bad={click} neutral={push} onReset={handleReset} />
+        <Feedback good={feedback.good} bad={feedback.bad} neutral={feedback.neutral} />
       ) : (
         <Notification />
       )}
